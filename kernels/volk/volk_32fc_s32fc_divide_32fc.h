@@ -181,7 +181,7 @@ volk_32fc_s32fc_divide_32fc_generic(lv_32fc_t* cVector, const lv_32fc_t* aVector
   unsigned int number = 0;
 
   for(number = 0; number < num_points; number++){
-    *cPtr++ = (*aPtr++) / (scalar);
+    *cPtr++ = (*aPtr++) *lv_conj(den_32fc);
   }
 }
 #endif /* LV_HAVE_GENERIC */
@@ -216,12 +216,12 @@ volk_32fc_s32fc_divide_32fc_a_sse3(lv_32fc_t* cVector, const lv_32fc_t* numerato
   unsigned int number = 0;
   const unsigned int quarterPoints = num_points / 4;
 
-  __m128 num01, num23, den, norm, result;
+  __m128 num01, num23, den;
   lv_32fc_t* c = cVector;
   const lv_32fc_t* a = numeratorVector;
   const lv_32fc_t norm_32fc = scalar * lv_conj(scalar);
-  den = _mm_set_ps(lv_cimag(scalar),lv_creal(scalar),lv_cimag(scalar),lv_creal(scalar));
-  norm = _mm_set_ps(lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc));
+  const lv_32fc_t den_32fc = scalar/norm_32fc;
+  den = _mm_set_ps(lv_cimag(den_32fc),lv_creal(den_32fc),lv_cimag(den_32fc),lv_creal(den_32fc));
 
   for(; number < quarterPoints; number++){
     num01 = _mm_load_ps((float*) a);    // first pair
@@ -232,11 +232,9 @@ volk_32fc_s32fc_divide_32fc_a_sse3(lv_32fc_t* cVector, const lv_32fc_t* numerato
     num23 = _mm_complexconjugatemul_ps(num23, den);   // a conj(b)
     a += 2;
 
-    result = _mm_div_ps(num01, norm);
-    _mm_store_ps((float*) c, result); // Store the results back into the C container
+    _mm_store_ps((float*) c, num01); // Store the results back into the C container
     c += 2;
-    result = _mm_div_ps(num23, norm);
-    _mm_store_ps((float*) c, result); // Store the results back into the C container
+    _mm_store_ps((float*) c, num23); // Store the results back into the C container
     c += 2;
   }
 
@@ -265,19 +263,18 @@ volk_32fc_s32fc_divide_32fc_a_avx(lv_32fc_t* cVector, const lv_32fc_t* numerator
     unsigned int number = 0;
     const unsigned int quarterPoints = num_points / 4;
 
-    __m256 num, den, norm,  mul_conj, div;
+    __m256 num, den, mul_conj;
     lv_32fc_t* c = cVector;
     const lv_32fc_t* a = numeratorVector;
     const lv_32fc_t norm_32fc = scalar * lv_conj(scalar);
-    den = _mm256_set_ps(lv_cimag(scalar),lv_creal(scalar),lv_cimag(scalar),lv_creal(scalar),lv_cimag(scalar),lv_creal(scalar),lv_cimag(scalar),lv_creal(scalar));
-    norm  = _mm256_set_ps(lv_creal(norm_32fc),lv_creal(norm_32fc), lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc),lv_creal(norm_32fc));
+    const lv_32fc_t den_32fc = scalar/norm_32fc;
+    den = _mm256_set_ps(lv_cimag(den_32fc),lv_creal(den_32fc),lv_cimag(den_32fc),lv_creal(den_32fc),lv_cimag(den_32fc),lv_creal(den_32fc),lv_cimag(den_32fc),lv_creal(den_32fc));
 
     for(; number < quarterPoints; number++){
         num = _mm256_load_ps((float*) a); // Load the ar + ai, br + bi ... as ar,ai,br,bi ...
         mul_conj = _mm256_complexconjugatemul_ps(num, den);
-        div = _mm256_div_ps(mul_conj,norm);
 
-        _mm256_store_ps((float*) c, div); // Store the results back into the C container
+        _mm256_store_ps((float*) c, mul_conj); // Store the results back into the C container
 
         a += 4;
         c += 4;
@@ -286,7 +283,7 @@ volk_32fc_s32fc_divide_32fc_a_avx(lv_32fc_t* cVector, const lv_32fc_t* numerator
     number = quarterPoints * 4;
 
     for(; number < num_points; number++){
-        *c++ = (*a++) / (scalar);
+        *c++ = (*a++)*lv_conj(den_32fc);
     }
 
 
@@ -303,9 +300,10 @@ volk_32fc_s32fc_divide_32fc_a_generic(lv_32fc_t* cVector, const lv_32fc_t* aVect
   lv_32fc_t* cPtr = cVector;
   const lv_32fc_t* aPtr = aVector;
   unsigned int number = 0;
+  const lv_32fc_t inv_scalar = 1.0f/scalar;
 
   for(number = 0; number < num_points; number++){
-    *cPtr++ = (*aPtr++)  / scalar;
+    *cPtr++ = (*aPtr++)*inv_scalar ;
   }
 }
 #endif /* LV_HAVE_GENERIC */
