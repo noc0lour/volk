@@ -1,6 +1,5 @@
 #include <volk/volk.h>
 #include "qa_utils.h"
-
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -505,7 +504,7 @@ bool run_volk_tests(volk_func_desc_t desc,
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         double arch_time = 1000.0 * elapsed_seconds.count();
-        std::cout << arch_list[i] << " completed in " << arch_time << "ms" << std::endl;
+        std::cout << arch_list[i] << " completed in " << arch_time << " ms" << std::endl;
         volk_test_time_t result;
         result.name = arch_list[i];
         result.time = arch_time;
