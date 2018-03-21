@@ -49,4 +49,5 @@ build_script:
    - ps: ls ./
 
 test_script:
-  - ps: msbuild RUN_TESTS.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - ps: ctest -V
+  # - ps: msbuild RUN_TESTS.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
