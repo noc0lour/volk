@@ -1,55 +1,48 @@
-clone_depth: 1
+version: 1.0.{build}
 
-os: Visual Studio 2013
+configuration: Release
+platform: x64
 
-install:
-    - echo "Installing Boost libraries..."
-    - nuget install boost_system-vc120
-    - nuget install boost_filesystem-vc120
-    - nuget install boost_chrono-vc120
-    - nuget install boost_program_options-vc120
-    - nuget install boost_unit_test_framework-vc120
+init:
+  - ps: |
+      If ($env:Platform -Match "x86") {
+        $env:ARCHITECTURE="32"
+      } Else {
+        $env:ARCHITECTURE="64"
+        $env:GENERATOR_SUFFIX=" Win64"
+      }
 
-    - echo "Installing Cheetah templates..."
-    - appveyor DownloadFile https://pypi.python.org/packages/source/C/Cheetah/Cheetah-2.4.4.tar.gz
-    - 7z x Cheetah-2.4.4.tar.gz
-    - 7z x -y Cheetah-2.4.4.tar
-    - cd Cheetah-2.4.4
-    - c:\Python27\python.exe setup.py build
-    - c:\Python27\python.exe setup.py install
+      $env:LIB_ARCHITECTURE="lib$($env:ARCHITECTURE)"
+      $env:WINDOWS_ARCHITECTURE="win$($env:ARCHITECTURE)"
+
+      $env:BOOST_ROOT="C:/Libraries/boost_$($env:BOOST_VER)"
+      $env:BOOST_INCLUDEDIR="$($env:BOOST_ROOT)"
+      $env:BOOST_LIBRARYDIR="$($env:BOOST_ROOT)/$($env:LIB_ARCHITECTURE)-msvc-$($env:VISUAL_STUDIO_VERSION)"
+
+      $env:GENERATOR="$($env:GENERATOR)$($env:GENERATOR_SUFFIX)"
+
+environment:
+  matrix:
+    - GENERATOR: "Visual Studio 14 2015"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      VISUAL_STUDIO_VERSION: "14.0"
+      BOOST_VER: 1_59_0
+    - GENERATOR: "Visual Studio 15 2017"
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      VISUAL_STUDIO_VERSION: "15.0"
+      BOOST_VER: 1_64_0
+
+before_build:
+  - ps: |
+      mkdir build
+      cd build
+      cmake --version
+  - cmd: cmake .. -G "%GENERATOR%"
 
 build_script:
-    - cd c:\projects\volk
+   - msbuild ALL_BUILD.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+   - msbuild PACKAGE.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+   - ps: ls ./
 
-    # Without this directory in the %PATH%, compiler tests fail because of missing DLLs
-    - set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin
-
-    - cmake -G "Visual Studio 12 Win64" \
-        -DBoost_CHRONO_LIBRARY_RELEASE:FILEPATH=c:/projects/volk/boost_chrono-vc120.1.59.0.0/lib/native/address-model-64/lib/boost_chrono-vc120-mt-1_59.lib \
-        -DBoost_FILESYSTEM_LIBRARY_RELEASE:FILEPATH=c:/projects/volk/boost_filesystem-vc120.1.59.0.0/lib/native/address-model-64/lib/boost_filesystem-vc120-mt-1_59.lib \
-        -DBoost_PROGRAM_OPTIONS_LIBRARY_RELEASE:FILEPATH=c:/projects/volk/boost_program_options-vc120.1.59.0.0/lib/native/address-model-64/lib/boost_program_options-vc120-mt-1_59.lib \
-        -DBoost_SYSTEM_LIBRARY_RELEASE:FILEPATH=c:/projects/volk/boost_system-vc120.1.59.0.0/lib/native/address-model-64/lib/boost_system-vc120-mt-1_59.lib \
-        -DBoost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE:FILEPATH=c:/projects/volk/boost_unit_test_framework-vc120.1.59.0.0/lib/native/address-model-64/lib/boost_unit_test_framework-vc120-mt-1_59.lib \
-        -DBoost_INCLUDE_DIR:PATH=c:/projects/volk/boost.1.59.0.0/lib/native/include \
-        -DCMAKE_BUILD_TYPE:STRING=Release -DENABLE_ORC:BOOL=OFF -DENABLE_TESTING:BOOL=OFF \
-        .
-
-    - cmake --build . --config Release --target INSTALL
-
-    # Create an archive
-    - cd "c:\Program Files"
-    - 7z a "c:\libvolk-x64.zip" volk
-
-    # Create the deps archive
-    - mkdir dlls
-    - copy c:\projects\volk\boost_chrono-vc120.1.59.0.0\lib\native\address-model-64\lib\boost_chrono-vc120-mt-1_59.dll dlls\boost_chrono-vc120-mt-1_59.dll
-    - copy c:\projects\volk\boost_filesystem-vc120.1.59.0.0\lib\native\address-model-64\lib\boost_filesystem-vc120-mt-1_59.dll dlls\boost_filesystem-vc120-mt-1_59.dll
-    - copy c:\projects\volk\boost_program_options-vc120.1.59.0.0\lib\native\address-model-64\lib\boost_program_options-vc120-mt-1_59.dll dlls\boost_program_options-vc120-mt-1_59.dll
-    - copy c:\projects\volk\boost_system-vc120.1.59.0.0\lib\native\address-model-64\lib\boost_system-vc120-mt-1_59.dll dlls\boost_system-vc120-mt-1_59.dll
-    - copy c:\projects\volk\boost_unit_test_framework-vc120.1.59.0.0\lib\native\address-model-64\lib\boost_unit_test_framework-vc120-mt-1_59.dll dlls\boost_unit_test_framework-vc120-mt-1_59.dll
-    - cd dlls
-    - 7z a "c:\libvolk-x64-deps.zip" *
-
-    # Push it!
-    - appveyor PushArtifact c:\libvolk-x64.zip
-    - appveyor PushArtifact c:\libvolk-x64-deps.zip
+test:
+  - ps: msbuild TEST.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
