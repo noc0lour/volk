@@ -32,6 +32,10 @@ environment:
       VISUAL_STUDIO_VERSION: "15.0"
       BOOST_VER: 1_64_0
 
+install:
+  - ps: |
+      pip install mako
+
 before_build:
   - ps: |
       mkdir build
