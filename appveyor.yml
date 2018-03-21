@@ -46,7 +46,6 @@ before_build:
 
 build_script:
    - msbuild ALL_BUILD.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-   - msbuild PACKAGE.vcxproj /m /verbosity:normal /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
    - ps: ls ./
 
 test_script:
