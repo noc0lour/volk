@@ -7,13 +7,12 @@
 #include <boost/token_iterator.hpp>                 // for token_iterator
 #include <boost/tokenizer.hpp>                      // for tokenizer
 #include <stdint.h>                                 // for uint16_t, uint64_t
-#include <sys/time.h>                               // for CLOCKS_PER_SEC
-#include <sys/types.h>                              // for int16_t, int32_t
 #include <volk/volk.h>                              // for volk_func_desc_t
 #include <volk/volk_malloc.h>                       // for volk_free, volk_m...
 #include <cmath>                                    // for sqrt, fabs, abs
 #include <cstring>                                  // for memcpy, memset
 #include <ctime>                                    // for clock
+#include <cstdint>
 #include <fstream>                                  // for operator<<, basic...
 #include <iostream>                                 // for cout, cerr
 #include <limits>                                   // for numeric_limits
