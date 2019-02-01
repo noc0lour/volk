@@ -231,10 +231,12 @@ endif()
 #    http://www.cmake.org/Wiki/CMake/Tutorials/Packaging
 ########################################################################
 
-configure_file(
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
   ${CMAKE_SOURCE_DIR}/cmake/Modules/VolkConfig.cmake.in
   ${CMAKE_BINARY_DIR}/cmake/Modules/VolkConfig.cmake
-@ONLY)
+  INSTALL_DESTINATION ${CMAKE_MODULES_DIR}/volk
+  )
 
 configure_file(
   ${CMAKE_SOURCE_DIR}/cmake/Modules/VolkConfigVersion.cmake.in

@@ -1,5 +1,7 @@
-get_filename_component(VOLK_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+@PACKAGE_INIT@
+
+get_filename_component(Volk_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 if(NOT TARGET Volk::volk)
-  include("${VOLK_CMAKE_DIR}/VolkTargets.cmake")
+  include("${Volk_CMAKE_DIR}/VolkTargets.cmake")
 endif()
